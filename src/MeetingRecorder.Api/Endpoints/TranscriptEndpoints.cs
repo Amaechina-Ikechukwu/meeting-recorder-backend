@@ -9,7 +9,7 @@ public static class TranscriptEndpoints
 {
     public static IEndpointRouteBuilder MapTranscriptEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/meetings/{meetingId}/transcript").RequireAuthorization().WithTags("Transcripts");
+        var group = app.MapGroup("/meetings/{meetingId}/transcript").WithTags("Transcripts");
 
         group.MapGet("/", async (
             string meetingId, GetMeetingTranscript useCase, ICurrentUserAccessor user, CancellationToken ct) =>
@@ -28,7 +28,6 @@ public static class TranscriptEndpoints
                 var result = await useCase.ExecuteAsync(user.UserId, meetingId, format, ct);
                 return Results.File(result.Content, result.ContentType, result.FileName);
             })
-            .RequireAuthorization()
             .WithTags("Transcripts")
             .WithName("ExportTranscript");
 

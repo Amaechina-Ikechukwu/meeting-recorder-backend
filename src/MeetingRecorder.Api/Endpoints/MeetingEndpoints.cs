@@ -9,7 +9,7 @@ public static class MeetingEndpoints
 {
     public static IEndpointRouteBuilder MapMeetingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/meetings").RequireAuthorization().WithTags("Meetings");
+        var group = app.MapGroup("/meetings").WithTags("Meetings");
 
         group.MapPost("/", async (
             CreateMeetingRequest request, CreateMeeting useCase, ICurrentUserAccessor user, CancellationToken ct) =>

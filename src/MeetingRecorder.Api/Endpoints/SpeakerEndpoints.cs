@@ -12,7 +12,6 @@ public static class SpeakerEndpoints
             string meetingId, string speakerId, RenameSpeakerRequest request,
             RenameSpeaker useCase, ICurrentUserAccessor user, CancellationToken ct) =>
                 Results.Ok(await useCase.ExecuteAsync(user.UserId, meetingId, speakerId, request, ct)))
-            .RequireAuthorization()
             .WithTags("Speakers")
             .WithName("RenameSpeaker");
 

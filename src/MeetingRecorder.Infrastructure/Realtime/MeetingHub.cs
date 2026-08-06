@@ -1,9 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MeetingRecorder.Infrastructure.Realtime;
 
-[Authorize]
 public class MeetingHub : Hub
 {
     public async Task JoinMeetingGroup(string meetingId)

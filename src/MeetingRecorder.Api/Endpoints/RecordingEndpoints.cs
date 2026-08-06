@@ -8,7 +8,7 @@ public static class RecordingEndpoints
 {
     public static IEndpointRouteBuilder MapRecordingEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/meetings/{meetingId}/recordings").RequireAuthorization().WithTags("Recordings");
+        var group = app.MapGroup("/meetings/{meetingId}/recordings").WithTags("Recordings");
 
         group.MapPost("/upload-url", async (
             string meetingId, GetUploadUrlRequest request, GetUploadUrl useCase, ICurrentUserAccessor user, CancellationToken ct) =>
