@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+COPY src/MeetingRecorder.Domain/MeetingRecorder.Domain.csproj src/MeetingRecorder.Domain/
+COPY src/MeetingRecorder.Application/MeetingRecorder.Application.csproj src/MeetingRecorder.Application/
+COPY src/MeetingRecorder.Infrastructure/MeetingRecorder.Infrastructure.csproj src/MeetingRecorder.Infrastructure/
+COPY src/MeetingRecorder.Workers/MeetingRecorder.Workers.csproj src/MeetingRecorder.Workers/
+RUN dotnet restore src/MeetingRecorder.Workers/MeetingRecorder.Workers.csproj
+
+COPY src/ src/
+RUN dotnet publish src/MeetingRecorder.Workers/MeetingRecorder.Workers.csproj -c Release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+WORKDIR /app
+COPY --from=build /app .
+
+ENTRYPOINT ["dotnet", "MeetingRecorder.Workers.dll"]
