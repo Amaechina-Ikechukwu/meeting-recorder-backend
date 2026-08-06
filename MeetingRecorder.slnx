@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MeetingRecorder.Api/MeetingRecorder.Api.csproj" />
+    <Project Path="src/MeetingRecorder.Application/MeetingRecorder.Application.csproj" />
+    <Project Path="src/MeetingRecorder.Domain/MeetingRecorder.Domain.csproj" />
+    <Project Path="src/MeetingRecorder.Infrastructure/MeetingRecorder.Infrastructure.csproj" />
+    <Project Path="src/MeetingRecorder.Workers/MeetingRecorder.Workers.csproj" />
+  </Folder>
+</Solution>

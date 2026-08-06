@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-MeetingRecorder.Workers-df74dc6d-1fe0-47aa-9473-eccb14e2a42d</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeetingRecorder.Application\MeetingRecorder.Application.csproj" />
+    <ProjectReference Include="..\MeetingRecorder.Infrastructure\MeetingRecorder.Infrastructure.csproj" />
+    <ProjectReference Include="..\MeetingRecorder.Domain\MeetingRecorder.Domain.csproj" />
+  </ItemGroup>
+</Project>
