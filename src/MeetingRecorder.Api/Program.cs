@@ -5,6 +5,7 @@ using MeetingRecorder.Application;
 using MeetingRecorder.Application.Abstractions;
 using MeetingRecorder.Infrastructure;
 using MeetingRecorder.Infrastructure.Realtime;
+using Microsoft.Extensions.FileProviders;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,6 +26,16 @@ builder.Services.AddOpenApi();
 var app = builder.Build();
 
 app.UseExceptionHandler();
+
+var docsPath = Path.Combine(app.Environment.ContentRootPath, "docs");
+if (Directory.Exists(docsPath))
+{
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(docsPath),
+        RequestPath = ""
+    });
+}
 
 app.MapOpenApi();
 app.MapScalarApiReference();
