@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Meeting Recorder API — React Integration Guide</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --surface: #ffffff;
+    --surface-raised: #ffffff;
+    --ink: #14161c;
+    --ink-muted: #5b6270;
+    --ink-faint: #8b91a0;
+    --border: #dfe3ea;
+    --border-strong: #c7ccd6;
+    --accent: #c2570f;
+    --accent-ink: #ffffff;
+    --code-bg: #14161c;
+    --code-ink: #e8e9ec;
+    --code-muted: #8b91a0;
+    --get: #1f6e82;
+    --get-bg: #e3eff1;
+    --post: #276b45;
+    --post-bg: #e3f0e8;
+    --patch: #6a4bb0;
+    --patch-bg: #ece6f8;
+    --danger: #a3341f;
+    --danger-bg: #f6e6e2;
+    --shadow: 0 1px 2px rgba(20, 22, 28, 0.04), 0 8px 24px -12px rgba(20, 22, 28, 0.12);
+    --font-display: "Iowan Old Style", "Sitka Text", "Georgia", ui-serif, serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --surface: #171a20;
+      --surface-raised: #1d2129;
+      --ink: #e8e9ec;
+      --ink-muted: #9aa0ac;
+      --ink-faint: #656b78;
+      --border: #2a2e37;
+      --border-strong: #3a3f4a;
+      --accent: #ff9d5c;
+      --accent-ink: #1a1206;
+      --code-bg: #0b0d11;
+      --code-ink: #e8e9ec;
+      --code-muted: #767c88;
+      --get: #74c3d8;
+      --get-bg: #16292e;
+      --post: #7fd6a5;
+      --post-bg: #16281e;
+      --patch: #bda3ef;
+      --patch-bg: #241d38;
+      --danger: #e8927e;
+      --danger-bg: #2f1c17;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  a { color: var(--accent); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+
+  p { line-height: 1.65; color: var(--ink); }
+  p.lede { color: var(--ink-muted); }
+
+  code, pre, kbd { font-family: var(--font-mono); }
+
+  /* ---------- Shell ---------- */
+
+  .shell {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1180px;
+    margin: 0 auto;
+  }
+
+  header.masthead {
+    grid-column: 1 / -1;
+    padding: 40px clamp(20px, 4vw, 48px) 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .eyebrow .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  header.masthead h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    margin: 10px 0 8px;
+  }
+
+  header.masthead p.lede {
+    font-size: 17px;
+    max-width: 640px;
+    margin: 0 0 18px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .meta-pill {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--ink-muted);
+  }
+
+  .meta-pill b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- Nav ---------- */
+
+  nav.toc {
+    padding: 32px 20px 60px clamp(20px, 4vw, 48px);
+    position: sticky;
+    top: 0;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+  }
+
+  nav.toc .toc-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+
+  nav.toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  nav.toc a {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 6px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 14px;
+    border-left: 2px solid transparent;
+  }
+
+  nav.toc a:hover {
+    background: var(--surface);
+    color: var(--ink);
+  }
+
+  nav.toc .sub {
+    padding-left: 22px;
+    font-size: 13px;
+  }
+
+  /* ---------- Main content ---------- */
+
+  main {
+    padding: 8px clamp(20px, 4vw, 48px) 100px;
+    min-width: 0;
+  }
+
+  section.doc-section {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+    max-width: 760px;
+  }
+
+  section.doc-section:last-child { border-bottom: none; }
+
+  section.doc-section h2 {
+    font-size: 24px;
+    margin: 0 0 6px;
+    scroll-margin-top: 20px;
+  }
+
+  section.doc-section h3 {
+    font-size: 17px;
+    margin: 28px 0 10px;
+    scroll-margin-top: 20px;
+  }
+
+  section.doc-section > p:first-of-type { margin-top: 0; }
+
+  .callout {
+    border: 1px solid var(--border-strong);
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 14.5px;
+    color: var(--ink-muted);
+  }
+
+  .callout strong { color: var(--ink); }
+
+  /* ---------- Endpoint cards ---------- */
+
+  .endpoint {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    margin: 16px 0;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .endpoint-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .verb {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 3px 8px;
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+
+  .verb.get { color: var(--get); background: var(--get-bg); }
+  .verb.post { color: var(--post); background: var(--post-bg); }
+  .verb.patch { color: var(--patch); background: var(--patch-bg); }
+
+  .endpoint-path {
+    font-family: var(--font-mono);
+    font-size: 14px;
+    color: var(--ink);
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .endpoint-desc {
+    padding: 12px 16px 4px;
+    font-size: 14.5px;
+    color: var(--ink-muted);
+  }
+
+  .endpoint-body { padding: 4px 16px 14px; }
+
+  table.fields {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    margin: 10px 0;
+  }
+
+  table.fields th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 6px 10px 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table.fields td {
+    padding: 7px 10px 7px 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  table.fields tr:last-child td { border-bottom: none; }
+
+  table.fields code {
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  table.fields .field-name { font-family: var(--font-mono); color: var(--ink); white-space: nowrap; }
+  table.fields .field-type { color: var(--ink-muted); font-family: var(--font-mono); white-space: nowrap; }
+
+  /* ---------- Code blocks ---------- */
+
+  .code-block {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    margin: 14px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .code-block .code-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--code-muted);
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .code-block pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .code-block code { font-family: var(--font-mono); }
+
+  .tok-kw { color: #ff9d5c; }
+  .tok-str { color: #8fd19e; }
+  .tok-com { color: #767c88; font-style: italic; }
+  .tok-fn { color: #7db8e8; }
+  .tok-prop { color: #d9a8ea; }
+  .tok-num { color: #f2c078; }
+
+  /* ---------- Status pills ---------- */
+
+  .status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+    margin: 14px 0;
+  }
+
+  .status-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+    font-size: 13.5px;
+  }
+
+  .status-card .code {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .status-card.err .code { color: var(--danger); }
+  .status-card.ok .code { color: var(--post); }
+
+  /* ---------- Footer ---------- */
+
+  footer {
+    grid-column: 1 / -1;
+    padding: 28px clamp(20px, 4vw, 48px) 48px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  /* ---------- Responsive ---------- */
+
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    nav.toc {
+      position: static;
+      max-height: none;
+      padding: 18px clamp(20px, 4vw, 48px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav.toc ul { flex-direction: row; flex-wrap: wrap; }
+    nav.toc .sub { display: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a, .endpoint { transition: background-color 0.15s ease, border-color 0.15s ease; }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="masthead">
+    <div class="eyebrow"><span class="dot"></span> Meeting Recorder Backend</div>
+    <h1>React Integration Guide</h1>
+    <p class="lede">Everything a frontend needs to talk to the Api service: authenticate with Firebase, drive the meeting/recording/transcript endpoints, and subscribe to live status over SignalR.</p>
+    <div class="meta-row">
+      <span class="meta-pill">Base URL: <b>https://&lt;your-cloud-run-url&gt;</b></span>
+      <span class="meta-pill">Auth: <b>Firebase ID token, Bearer</b></span>
+      <span class="meta-pill">Realtime: <b>SignalR · /hubs/meeting</b></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">On this page</div>
+    <ul>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#auth">Authentication</a></li>
+      <li><a href="#meetings">Meetings</a></li>
+      <li class="sub"><a href="#meetings-create">Create</a></li>
+      <li class="sub"><a href="#meetings-read">Read &amp; status</a></li>
+      <li><a href="#recordings">Recordings</a></li>
+      <li class="sub"><a href="#recordings-flow">Upload flow</a></li>
+      <li><a href="#transcripts">Transcripts</a></li>
+      <li><a href="#speakers">Speakers</a></li>
+      <li><a href="#realtime">Realtime updates</a></li>
+      <li><a href="#errors">Errors</a></li>
+      <li><a href="#hook">Full example hook</a></li>
+    </ul>
+  </nav>
+
+  <main>
+
+    <section class="doc-section" id="overview">
+      <h2>Overview</h2>
+      <p>The Api service exposes a REST surface under <code>/meetings/...</code> and a SignalR hub at <code>/hubs/meeting</code> for live status. A meeting moves through recording, upload, background transcription/diarization, and lands in <code>Ready</code> — the frontend's job is to create it, upload audio to a signed URL, then either poll or subscribe for the status change.</p>
+      <div class="callout"><strong>Flow in short:</strong> create meeting → request an upload URL → PUT the audio file directly to storage → mark the recording complete → wait for <code>Ready</code> via SignalR → fetch the transcript.</div>
+    </section>
+
+    <section class="doc-section" id="auth">
+      <h2>Authentication</h2>
+      <p>Every REST call and the hub connection require a Firebase ID token as a bearer token. Sign the user in with the Firebase JS SDK, then attach <code>getIdToken()</code> to each request — it self-refreshes, so don't cache it beyond a request.</p>
+
+      <div class="code-block">
+        <div class="code-label">lib/api.ts</div>
+        <pre><code><span class="tok-kw">import</span> { getAuth } <span class="tok-kw">from</span> <span class="tok-str">"firebase/auth"</span>;
+
+<span class="tok-kw">const</span> BASE_URL = <span class="tok-str">import.meta.env.VITE_API_BASE_URL</span>;
+
+<span class="tok-kw">async function</span> <span class="tok-fn">authHeader</span>() {
+  <span class="tok-kw">const</span> user = getAuth().currentUser;
+  <span class="tok-kw">if</span> (!user) <span class="tok-kw">throw new</span> Error(<span class="tok-str">"Not signed in"</span>);
+  <span class="tok-kw">const</span> token = <span class="tok-kw">await</span> user.<span class="tok-fn">getIdToken</span>();
+  <span class="tok-kw">return</span> { Authorization: <span class="tok-str">`Bearer ${token}`</span> };
+}
+
+<span class="tok-kw">export async function</span> <span class="tok-fn">api</span>&lt;T&gt;(path: <span class="tok-kw">string</span>, init: RequestInit = {}): Promise&lt;T&gt; {
+  <span class="tok-kw">const</span> res = <span class="tok-kw">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">`${BASE_URL}${path}`</span>, {
+    ...init,
+    headers: { <span class="tok-str">"Content-Type"</span>: <span class="tok-str">"application/json"</span>, ...(<span class="tok-kw">await</span> <span class="tok-fn">authHeader</span>()), ...init.headers },
+  });
+  <span class="tok-kw">if</span> (!res.ok) <span class="tok-kw">throw new</span> Error(<span class="tok-str">`${res.status} ${res.statusText}`</span>);
+  <span class="tok-kw">return</span> res.<span class="tok-fn">status</span> === <span class="tok-num">204</span> ? (<span class="tok-kw">undefined</span> <span class="tok-kw">as</span> T) : res.<span class="tok-fn">json</span>();
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="meetings">
+      <h2>Meetings</h2>
+      <p>All meeting routes are scoped to the caller — the backend resolves the owner from the token, so there's no user ID in the URL.</p>
+
+      <h3 id="meetings-create">Create a meeting</h3>
+      <div class="endpoint">
+        <div class="endpoint-head">
+          <span class="verb post">POST</span>
+          <span class="endpoint-path">/meetings</span>
+        </div>
+        <div class="endpoint-desc">Starts a meeting record before any audio exists. Returns <code>201</code> with the new meeting.</div>
+        <div class="endpoint-body">
+          <table class="fields">
+            <tr><th>Body field</th><th>Type</th><th>Notes</th></tr>
+            <tr><td class="field-name">title</td><td class="field-type">string</td><td>Required</td></tr>
+            <tr><td class="field-name">participantHints</td><td class="field-type">string[] | null</td><td>Optional, e.g. known speaker names</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">create meeting</div>
+        <pre><code><span class="tok-kw">const</span> meeting = <span class="tok-kw">await</span> <span class="tok-fn">api</span>&lt;MeetingDto&gt;(<span class="tok-str">"/meetings"</span>, {
+  method: <span class="tok-str">"POST"</span>,
+  body: JSON.<span class="tok-fn">stringify</span>({ title: <span class="tok-str">"Weekly sync"</span>, participantHints: [<span class="tok-str">"Amaechi"</span>] }),
+});
+<span class="tok-com">// meeting.id, meeting.status === "Recording"</span></code></pre>
+      </div>
+
+      <h3 id="meetings-read">Read &amp; status</h3>
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}</span></div>
+        <div class="endpoint-desc">Full <code>MeetingDto</code> — id, title, status, failure reason, participant hints.</div>
+      </div>
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}/status</span></div>
+        <div class="endpoint-desc">Lightweight poll target — just <code>id</code>, <code>status</code>, <code>failureReason</code>, <code>failureMessage</code>. Prefer the SignalR event below over polling this.</div>
+      </div>
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb post">POST</span><span class="endpoint-path">/meetings/{meetingId}/retry?recordingId=...</span></div>
+        <div class="endpoint-desc">Re-queues processing for a <code>Failed</code> meeting against a given recording. Returns <code>202</code>.</div>
+      </div>
+
+      <div class="callout"><strong>Status values:</strong> <code>Recording → Uploaded → Processing → Ready</code>, or <code>Failed</code> with a <code>failureReason</code> of <code>TranscriptionFailed</code>, <code>DiarizationFailed</code>, <code>StorageError</code>, or <code>MergeFailed</code>.</div>
+    </section>
+
+    <section class="doc-section" id="recordings">
+      <h2>Recordings</h2>
+      <p>Audio never passes through the Api service — the frontend uploads straight to storage using a short-lived signed URL, then tells the backend the upload finished.</p>
+
+      <h3 id="recordings-flow">Three-step upload flow</h3>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb post">POST</span><span class="endpoint-path">/meetings/{meetingId}/recordings/upload-url</span></div>
+        <div class="endpoint-desc">Request a signed upload URL for one recording.</div>
+        <div class="endpoint-body">
+          <table class="fields">
+            <tr><th>Body field</th><th>Type</th></tr>
+            <tr><td class="field-name">contentType</td><td class="field-type">string</td></tr>
+            <tr><td class="field-name">fileExtension</td><td class="field-type">string</td></tr>
+          </table>
+          <table class="fields">
+            <tr><th>Response field</th><th>Type</th></tr>
+            <tr><td class="field-name">recordingId</td><td class="field-type">string</td></tr>
+            <tr><td class="field-name">uploadUrl</td><td class="field-type">string (URI)</td></tr>
+            <tr><td class="field-name">storageKey</td><td class="field-type">string</td></tr>
+            <tr><td class="field-name">expiresAt</td><td class="field-type">string (ISO date)</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb post">POST</span><span class="endpoint-path">/meetings/{meetingId}/recordings/{recordingId}/complete</span></div>
+        <div class="endpoint-desc">Called after the direct upload succeeds, so processing can start. Body: <code>{ durationMs }</code>. Returns <code>204</code>.</div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}/recordings/{recordingId}/audio-url</span></div>
+        <div class="endpoint-desc">Fetches a fresh signed playback URL: <code>{ url, expiresAt }</code>.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">upload a recording</div>
+        <pre><code><span class="tok-kw">async function</span> <span class="tok-fn">uploadRecording</span>(meetingId: <span class="tok-kw">string</span>, file: File) {
+  <span class="tok-kw">const</span> { recordingId, uploadUrl } = <span class="tok-kw">await</span> <span class="tok-fn">api</span>&lt;GetUploadUrlResponse&gt;(
+    <span class="tok-str">`/meetings/${meetingId}/recordings/upload-url`</span>,
+    { method: <span class="tok-str">"POST"</span>, body: JSON.<span class="tok-fn">stringify</span>({ contentType: file.type, fileExtension: <span class="tok-str">"webm"</span> }) },
+  );
+
+  <span class="tok-com">// direct PUT to storage — no auth header, the URL itself is the credential</span>
+  <span class="tok-kw">await</span> <span class="tok-fn">fetch</span>(uploadUrl, { method: <span class="tok-str">"PUT"</span>, headers: { <span class="tok-str">"Content-Type"</span>: file.type }, body: file });
+
+  <span class="tok-kw">await</span> <span class="tok-fn">api</span>(<span class="tok-str">`/meetings/${meetingId}/recordings/${recordingId}/complete`</span>, {
+    method: <span class="tok-str">"POST"</span>,
+    body: JSON.<span class="tok-fn">stringify</span>({ durationMs: <span class="tok-num">file.size</span> }), <span class="tok-com">// use actual recorded duration</span>
+  });
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="transcripts">
+      <h2>Transcripts</h2>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}/transcript</span></div>
+        <div class="endpoint-desc">Full transcript once <code>status</code> is <code>Ready</code>: <code>{ id, meetingId, createdAt, segments[] }</code>, each segment carrying <code>speakerId</code>, <code>speakerLabel</code>, <code>text</code>, <code>startMs</code>, <code>endMs</code>, <code>confidence</code>.</div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}/transcript/search?q=...</span></div>
+        <div class="endpoint-desc">Returns matching <code>TranscriptSegmentDto[]</code>, ordered by <code>startMs</code>.</div>
+      </div>
+
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb get">GET</span><span class="endpoint-path">/meetings/{meetingId}/export?format=Srt</span></div>
+        <div class="endpoint-desc">Downloads a file. <code>format</code> is one of <code>Srt</code>, <code>Vtt</code>, <code>Docx</code>, <code>Txt</code> — response is the raw file, not JSON.</div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-label">download an export</div>
+        <pre><code><span class="tok-kw">async function</span> <span class="tok-fn">downloadTranscript</span>(meetingId: <span class="tok-kw">string</span>, format: <span class="tok-str">"Srt"</span> | <span class="tok-str">"Vtt"</span> | <span class="tok-str">"Docx"</span> | <span class="tok-str">"Txt"</span>) {
+  <span class="tok-kw">const</span> res = <span class="tok-kw">await</span> <span class="tok-fn">fetch</span>(<span class="tok-str">`${BASE_URL}/meetings/${meetingId}/export?format=${format}`</span>, {
+    headers: <span class="tok-kw">await</span> <span class="tok-fn">authHeader</span>(),
+  });
+  <span class="tok-kw">const</span> blob = <span class="tok-kw">await</span> res.<span class="tok-fn">blob</span>();
+  <span class="tok-kw">const</span> url = URL.<span class="tok-fn">createObjectURL</span>(blob);
+  <span class="tok-kw">const</span> a = document.<span class="tok-fn">createElement</span>(<span class="tok-str">"a"</span>);
+  a.href = url; a.download = <span class="tok-str">`transcript.${format.toLowerCase()}`</span>; a.<span class="tok-fn">click</span>();
+  URL.<span class="tok-fn">revokeObjectURL</span>(url);
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="speakers">
+      <h2>Speakers</h2>
+      <div class="endpoint">
+        <div class="endpoint-head"><span class="verb patch">PATCH</span><span class="endpoint-path">/meetings/{meetingId}/speakers/{speakerId}</span></div>
+        <div class="endpoint-desc">Renames a diarized speaker label. Body: <code>{ label }</code>. Returns the updated <code>SpeakerDto</code> — use this to let users relabel "Speaker 1" as a real name after reviewing the transcript.</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="realtime">
+      <h2>Realtime updates</h2>
+      <p>The hub at <code>/hubs/meeting</code> requires the same bearer token. Join a meeting's group after connecting, then listen for two events pushed as transcription/diarization work completes in the background.</p>
+
+      <table class="fields">
+        <tr><th>Event</th><th>Payload</th></tr>
+        <tr><td class="field-name">meetingStatusChanged</td><td class="field-type">{ meetingId, status }</td></tr>
+        <tr><td class="field-name">transcriptSegmentReady</td><td class="field-type">TranscriptSegment</td></tr>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">hooks/useMeetingHub.ts</div>
+        <pre><code><span class="tok-kw">import</span> * <span class="tok-kw">as</span> signalR <span class="tok-kw">from</span> <span class="tok-str">"@microsoft/signalr"</span>;
+
+<span class="tok-kw">export async function</span> <span class="tok-fn">connectMeetingHub</span>(meetingId: <span class="tok-kw">string</span>) {
+  <span class="tok-kw">const</span> token = <span class="tok-kw">await</span> getAuth().currentUser?.<span class="tok-fn">getIdToken</span>();
+
+  <span class="tok-kw">const</span> connection = <span class="tok-kw">new</span> signalR.HubConnectionBuilder()
+    .<span class="tok-fn">withUrl</span>(<span class="tok-str">`${BASE_URL}/hubs/meeting`</span>, { accessTokenFactory: () =&gt; token! })
+    .<span class="tok-fn">withAutomaticReconnect</span>()
+    .<span class="tok-fn">build</span>();
+
+  connection.<span class="tok-fn">on</span>(<span class="tok-str">"meetingStatusChanged"</span>, (e: { meetingId: <span class="tok-kw">string</span>; status: <span class="tok-kw">string</span> }) =&gt; {
+    <span class="tok-com">// update local state when e.status becomes "Ready" or "Failed"</span>
+  });
+
+  connection.<span class="tok-fn">on</span>(<span class="tok-str">"transcriptSegmentReady"</span>, (segment: TranscriptSegmentDto) =&gt; {
+    <span class="tok-com">// append to the live transcript view</span>
+  });
+
+  <span class="tok-kw">await</span> connection.<span class="tok-fn">start</span>();
+  <span class="tok-kw">await</span> connection.<span class="tok-fn">invoke</span>(<span class="tok-str">"JoinMeetingGroup"</span>, meetingId);
+  <span class="tok-kw">return</span> connection; <span class="tok-com">// call connection.invoke("LeaveMeetingGroup", meetingId) + connection.stop() on cleanup</span>
+}</code></pre>
+      </div>
+    </section>
+
+    <section class="doc-section" id="errors">
+      <h2>Errors</h2>
+      <p>Failures come back as RFC 7807 problem details: <code>{ status, title }</code>. The JWT middleware returns a bare <code>401</code> with no body when the token is missing or invalid.</p>
+      <div class="status-grid">
+        <div class="status-card err"><span class="code">400</span> — validation failed, <code>title</code> lists the errors</div>
+        <div class="status-card err"><span class="code">401</span> — missing or expired token</div>
+        <div class="status-card err"><span class="code">403</span> — authenticated, but not this meeting's owner</div>
+        <div class="status-card err"><span class="code">404</span> — meeting, recording, or speaker not found</div>
+      </div>
+    </section>
+
+    <section class="doc-section" id="hook">
+      <h2>Full example: a meeting-detail hook</h2>
+      <p>Combines the REST read with the live subscription — a typical shape for a meeting detail screen.</p>
+      <div class="code-block">
+        <div class="code-label">hooks/useMeeting.ts</div>
+        <pre><code><span class="tok-kw">export function</span> <span class="tok-fn">useMeeting</span>(meetingId: <span class="tok-kw">string</span>) {
+  <span class="tok-kw">const</span> [meeting, setMeeting] = useState&lt;MeetingDto | <span class="tok-kw">null</span>&gt;(<span class="tok-kw">null</span>);
+  <span class="tok-kw">const</span> [transcript, setTranscript] = useState&lt;TranscriptSegmentDto[]&gt;([]);
+
+  useEffect(() =&gt; {
+    <span class="tok-kw">let</span> connection: signalR.HubConnection | <span class="tok-kw">undefined</span>;
+
+    (<span class="tok-kw">async</span> () =&gt; {
+      setMeeting(<span class="tok-kw">await</span> <span class="tok-fn">api</span>&lt;MeetingDto&gt;(<span class="tok-str">`/meetings/${meetingId}`</span>));
+      connection = <span class="tok-kw">await</span> <span class="tok-fn">connectMeetingHub</span>(meetingId);
+
+      connection.<span class="tok-fn">on</span>(<span class="tok-str">"meetingStatusChanged"</span>, <span class="tok-kw">async</span> () =&gt; {
+        setMeeting(<span class="tok-kw">await</span> <span class="tok-fn">api</span>&lt;MeetingDto&gt;(<span class="tok-str">`/meetings/${meetingId}`</span>));
+      });
+      connection.<span class="tok-fn">on</span>(<span class="tok-str">"transcriptSegmentReady"</span>, (segment: TranscriptSegmentDto) =&gt; {
+        setTranscript((prev) =&gt; [...prev, segment]);
+      });
+    })();
+
+    <span class="tok-kw">return</span> () =&gt; { connection?.<span class="tok-fn">invoke</span>(<span class="tok-str">"LeaveMeetingGroup"</span>, meetingId); connection?.<span class="tok-fn">stop</span>(); };
+  }, [meetingId]);
+
+  <span class="tok-kw">return</span> { meeting, transcript };
+}</code></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Generated from the current Api route map and DTOs — regenerate if endpoints change. Not affiliated with any published API version.
+  </footer>
+</div>
+
+</body>
+</html>
