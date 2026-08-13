@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 namespace MeetingRecorder.Infrastructure.SpeechToText;
 
 /// <summary>Thin wrapper over Deepgram's prerecorded /v1/listen endpoint. Returns
-/// word-level results with per-word speaker labels (diarize=true), which both the
+/// word-level results with per-word speaker labels, which both the
 /// transcription and diarization engines derive their output from.</summary>
 internal class DeepgramClient(HttpClient httpClient, IRecordingStorage storage, IOptions<DeepgramOptions> options)
 {
@@ -21,7 +21,7 @@ internal class DeepgramClient(HttpClient httpClient, IRecordingStorage storage, 
 
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
-            $"v1/listen?model={_options.Model}&diarize=true&punctuate=true&smart_format=true")
+            $"v1/listen?model={Uri.EscapeDataString(_options.Model)}&diarize_model={Uri.EscapeDataString(_options.DiarizationModel)}&punctuate=true&smart_format=true")
         {
             Content = content
         };
