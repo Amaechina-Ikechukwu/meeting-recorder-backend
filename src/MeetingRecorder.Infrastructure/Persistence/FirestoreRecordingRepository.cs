@@ -1,6 +1,8 @@
 using Google.Cloud.Firestore;
 using MeetingRecorder.Application.Abstractions;
 using MeetingRecorder.Domain.Entities;
+using MeetingRecorder.Domain.Enums;
+using MeetingRecorder.Domain.ValueObjects;
 using MeetingRecorder.Infrastructure.Persistence.Documents;
 
 namespace MeetingRecorder.Infrastructure.Persistence;
@@ -21,4 +23,22 @@ public class FirestoreRecordingRepository(FirestoreDb db) : IRecordingRepository
 
     public Task UpdateAsync(Recording recording, CancellationToken ct = default) =>
         RecordingsOf(recording.MeetingId).Document(recording.Id).SetAsync(recording.ToDocument(), SetOptions.MergeAll, ct);
+
+    public Task MarkTranscriptionReadyAsync(string meetingId, string recordingId, CancellationToken ct = default) =>
+        RecordingsOf(meetingId).Document(recordingId).UpdateAsync("transcriptionReady", true, cancellationToken: ct);
+
+    public Task SaveDiarizationResultAsync(string meetingId, string recordingId, IReadOnlyList<SpeakerTurn> turns, CancellationToken ct = default) =>
+        RecordingsOf(meetingId).Document(recordingId).UpdateAsync(new Dictionary<string, object>
+        {
+            ["speakerTurns"] = turns.Select(t => new SpeakerTurnDocument
+            {
+                StartMs = t.StartMs,
+                EndMs = t.EndMs,
+                SpeakerLabel = t.SpeakerLabel
+            }).ToList(),
+            ["diarizationReady"] = true
+        }, cancellationToken: ct);
+
+    public Task UpdateStatusAsync(string meetingId, string recordingId, RecordingStatus status, CancellationToken ct = default) =>
+        RecordingsOf(meetingId).Document(recordingId).UpdateAsync("status", status.ToString(), cancellationToken: ct);
 }

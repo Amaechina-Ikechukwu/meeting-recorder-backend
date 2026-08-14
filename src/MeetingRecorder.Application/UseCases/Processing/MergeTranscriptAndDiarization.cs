@@ -25,6 +25,11 @@ public class MergeTranscriptAndDiarization(
         if (!recording.TranscriptionReady || !recording.DiarizationReady)
             return;
 
+        // Already merged (e.g. message redelivery) — re-running would re-split segments
+        // and double-count speaking time.
+        if (recording.Status == RecordingStatus.Processed)
+            return;
+
         var transcript = await transcripts.GetByMeetingIdAsync(meetingId, ct)
             ?? throw new Exceptions.NotFoundException(nameof(Transcript), meetingId);
 
@@ -63,8 +68,7 @@ public class MergeTranscriptAndDiarization(
         meeting.Status = MeetingStatus.Ready;
         await meetings.UpdateAsync(meeting, ct);
 
-        recording.Status = RecordingStatus.Processed;
-        await recordings.UpdateAsync(recording, ct);
+        await recordings.UpdateStatusAsync(meetingId, recordingId, RecordingStatus.Processed, ct);
 
         await publisher.PublishAsync(QueueNames.MeetingReady, new MeetingReadyMessage(meetingId), ct);
     }

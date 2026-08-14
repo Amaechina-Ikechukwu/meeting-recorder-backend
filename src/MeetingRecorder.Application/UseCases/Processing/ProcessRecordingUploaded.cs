@@ -43,8 +43,9 @@ public class ProcessRecordingUploaded(
         foreach (var segment in transcript.Segments.OrderBy(s => s.StartMs))
             await notifier.NotifyTranscriptSegmentReadyAsync(message.MeetingId, segment, ct);
 
-        recording.TranscriptionReady = true;
-        await recordings.UpdateAsync(recording, ct);
+        // Field-scoped write: the diarization worker updates this recording in parallel,
+        // and a full-document write here would clobber its DiarizationReady/SpeakerTurns.
+        await recordings.MarkTranscriptionReadyAsync(message.MeetingId, message.RecordingId, ct);
 
         await publisher.PublishAsync(
             QueueNames.TranscriptionCompleted,

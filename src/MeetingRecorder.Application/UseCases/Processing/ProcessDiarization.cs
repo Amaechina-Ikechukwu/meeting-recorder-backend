@@ -18,9 +18,9 @@ public class ProcessDiarization(
 
         var turns = await diarizationEngine.DiarizeAsync(message.StorageKey, message.ContentType, ct);
 
-        recording.SpeakerTurns = [.. turns];
-        recording.DiarizationReady = true;
-        await recordings.UpdateAsync(recording, ct);
+        // Field-scoped write: the transcription worker updates this recording in parallel,
+        // and a full-document write here would clobber its TranscriptionReady flag.
+        await recordings.SaveDiarizationResultAsync(message.MeetingId, message.RecordingId, turns, ct);
 
         await publisher.PublishAsync(
             QueueNames.DiarizationCompleted,
