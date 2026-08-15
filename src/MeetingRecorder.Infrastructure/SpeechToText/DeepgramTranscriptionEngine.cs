@@ -4,7 +4,9 @@ using MeetingRecorder.Domain.Entities;
 namespace MeetingRecorder.Infrastructure.SpeechToText;
 
 /// <summary>Groups Deepgram's word-level output into transcript segments, splitting on
-/// sentence-ending punctuation or a >700ms gap between words (a natural pause).</summary>
+/// sentence-ending punctuation, a >700ms gap between words (a natural pause), or a
+/// Deepgram speaker change. Keeping speaker changes as hard boundaries ensures the
+/// merge stage never has to guess which words belong to which voice.</summary>
 internal class DeepgramTranscriptionEngine(DeepgramClient client) : ITranscriptionEngine
 {
     private static readonly TimeSpan PauseThreshold = TimeSpan.FromMilliseconds(700);
@@ -27,7 +29,9 @@ internal class DeepgramTranscriptionEngine(DeepgramClient client) : ITranscripti
                 var previousEndsSentence = buffer[^1].PunctuatedWord?.TrimEnd() is { Length: > 0 } pw &&
                                             (pw.EndsWith('.') || pw.EndsWith('?') || pw.EndsWith('!'));
 
-                if (gap > PauseThreshold || previousEndsSentence)
+                var speakerChanged = word.Speaker != buffer[^1].Speaker;
+
+                if (gap > PauseThreshold || previousEndsSentence || speakerChanged)
                 {
                     segments.Add(BuildSegment(buffer));
                     buffer.Clear();

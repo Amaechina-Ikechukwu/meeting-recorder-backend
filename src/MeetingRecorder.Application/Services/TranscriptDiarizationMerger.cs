@@ -5,7 +5,10 @@ namespace MeetingRecorder.Application.Services;
 
 /// <summary>
 /// Aligns diarization speaker turns with raw (speaker-less) transcript segments by
-/// timestamp overlap. Segments that span a speaker change are split at the boundary.
+/// timestamp overlap. The transcription engine normally makes speaker changes hard
+/// segment boundaries. If two independently-produced Deepgram responses differ by a
+/// few milliseconds at a boundary, the merger assigns the segment to the speaker
+/// with the greatest overlap instead of duplicating its text under each speaker.
 /// </summary>
 public static class TranscriptDiarizationMerger
 {
@@ -38,16 +41,16 @@ public static class TranscriptDiarizationMerger
                 continue;
             }
 
-            // Segment spans a speaker change: split at each turn boundary within the segment.
-            foreach (var turn in overlappingTurns)
-            {
-                var sliceStart = Math.Max(segment.StartMs, turn.StartMs);
-                var sliceEnd = Math.Min(segment.EndMs, turn.EndMs);
-                if (sliceEnd <= sliceStart)
-                    continue;
-
-                result.Add(WithSpeaker(segment, sliceStart, sliceEnd, turn, speakerIdForLabel));
-            }
+            // Transcript segments do not retain individual word timings, so splitting
+            // this text into every overlapping range would repeat the full sentence
+            // for multiple speakers. A speaker boundary should already have split it
+            // upstream; this is a safe fallback for tiny timing differences between
+            // the parallel transcription and diarization requests.
+            var dominantTurn = overlappingTurns
+                .OrderByDescending(turn => Math.Min(segment.EndMs, turn.EndMs) - Math.Max(segment.StartMs, turn.StartMs))
+                .ThenBy(turn => turn.StartMs)
+                .First();
+            result.Add(WithSpeaker(segment, segment.StartMs, segment.EndMs, dominantTurn, speakerIdForLabel));
         }
 
         return result;

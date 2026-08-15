@@ -9,7 +9,13 @@ internal class DeepgramDiarizationEngine(DeepgramClient client) : IDiarizationEn
     public async Task<IReadOnlyList<SpeakerTurn>> DiarizeAsync(
         string storageKey, string contentType, CancellationToken ct = default)
     {
-        var words = await client.TranscribeWordsAsync(storageKey, contentType, ct);
+        // The API returns chronological words, but sort defensively before deriving
+        // turns: a non-ordered response would otherwise create overlapping speaker
+        // ranges and cause the transcript merger to mislabel segments.
+        var words = (await client.TranscribeWordsAsync(storageKey, contentType, ct))
+            .OrderBy(word => word.Start)
+            .ThenBy(word => word.End)
+            .ToList();
         if (words.Count == 0)
             return [];
 
