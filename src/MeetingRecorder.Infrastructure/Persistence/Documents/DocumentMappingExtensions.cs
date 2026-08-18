@@ -1,7 +1,6 @@
 using Google.Cloud.Firestore;
 using MeetingRecorder.Domain.Entities;
 using MeetingRecorder.Domain.Enums;
-using MeetingRecorder.Domain.ValueObjects;
 
 namespace MeetingRecorder.Infrastructure.Persistence.Documents;
 
@@ -38,13 +37,6 @@ public static class DocumentMappingExtensions
         DurationMs = recording.DurationMs,
         Status = recording.Status.ToString(),
         TranscriptionReady = recording.TranscriptionReady,
-        DiarizationReady = recording.DiarizationReady,
-        SpeakerTurns = [.. recording.SpeakerTurns.Select(t => new SpeakerTurnDocument
-        {
-            StartMs = t.StartMs,
-            EndMs = t.EndMs,
-            SpeakerLabel = t.SpeakerLabel
-        })],
         CreatedAt = Timestamp.FromDateTimeOffset(recording.CreatedAt)
     };
 
@@ -57,8 +49,6 @@ public static class DocumentMappingExtensions
         DurationMs = doc.DurationMs,
         Status = Enum.Parse<RecordingStatus>(doc.Status),
         TranscriptionReady = doc.TranscriptionReady,
-        DiarizationReady = doc.DiarizationReady,
-        SpeakerTurns = [.. doc.SpeakerTurns.Select(t => new SpeakerTurn(t.StartMs, t.EndMs, t.SpeakerLabel))],
         CreatedAt = doc.CreatedAt.ToDateTimeOffset()
     };
 

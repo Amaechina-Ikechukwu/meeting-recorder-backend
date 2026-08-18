@@ -24,20 +24,6 @@ public static class RecordingEndpoints
             })
             .WithName("UploadRecording");
 
-        group.MapPost("/upload-url", async (
-            string meetingId, GetUploadUrlRequest request, GetUploadUrl useCase, ICurrentUserAccessor user, CancellationToken ct) =>
-                Results.Ok(await useCase.ExecuteAsync(user.UserId, meetingId, request, ct)))
-            .WithName("GetRecordingUploadUrl");
-
-        group.MapPost("/{recordingId}/complete", async (
-            string meetingId, string recordingId, CompleteUploadRequest request,
-            CompleteUpload useCase, ICurrentUserAccessor user, CancellationToken ct) =>
-            {
-                await useCase.ExecuteAsync(user.UserId, meetingId, recordingId, request, ct);
-                return Results.NoContent();
-            })
-            .WithName("CompleteRecordingUpload");
-
         group.MapGet("/{recordingId}/audio-url", async (
             string meetingId, string recordingId, GetAudioUrl useCase, ICurrentUserAccessor user, CancellationToken ct) =>
                 Results.Ok(await useCase.ExecuteAsync(user.UserId, meetingId, recordingId, ct)))

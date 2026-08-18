@@ -10,9 +10,6 @@ builder.Services
     .AddSignalRRealtime();
 
 builder.Services.AddHostedService<TranscriptionConsumer>();
-builder.Services.AddHostedService<DiarizationConsumer>();
-builder.Services.AddHostedService<MergeOnTranscriptionCompletedConsumer>();
-builder.Services.AddHostedService<MergeOnDiarizationCompletedConsumer>();
 builder.Services.AddHostedService<NotificationConsumer>();
 
 var host = builder.Build();

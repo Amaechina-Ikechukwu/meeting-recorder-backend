@@ -41,7 +41,27 @@ src/
 5. A **Merge Worker** consumes both completion events, aligns diarization speaker turns with transcript segments (by timestamp overlap), writes the final `Transcript` document, updates `Meeting.Status = Ready`, and optionally emails the user via ZeptoMail.
 6. Client subscribes to a **SignalR hub** for live status/progress updates, then fetches the finished transcript once `meeting.ready` fires.
 
+
 Running transcription and diarization as parallel, independently-queued jobs (rather than one sequential pipeline) keeps latency down and lets either stage retry independently on failure.
+
+> **What actually shipped (superseding steps 2–5 above).** Deepgram returns a per-word speaker
+> index on the *same* response that carries the text — option 1 in §4.3, "provider-native
+> diarization". The implementation nonetheless took option 2 and ran a second, identical
+> `/v1/listen` call purely to recover those labels, so every recording was transcribed and
+> billed twice and re-downloaded from GCS twice, and could only reach `Ready` once two
+> independent workers had both finished.
+>
+> That is now one pass. `ProcessRecordingUploaded` transcribes once, derives speaker
+> attribution from the words it already has, writes the `Speaker` entities, and sets
+> `Meeting.Status = Ready` itself. The diarization worker, the merge worker, and the
+> `diarization.completed` event are gone, as are `Recording.DiarizationReady` and
+> `Recording.SpeakerTurns`.
+>
+> There is also no Workers host deployed, so the API calls that pipeline **inline** during the
+> upload request rather than publishing `RecordingUploaded`. No broker sits in the request
+> path. The tradeoff is that the caller waits for the STT round-trip and the work must finish
+> inside Cloud Run's request timeout; moving it back off the request path means deploying
+> Workers and restoring the publish.
 
 ---
 

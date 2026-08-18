@@ -23,25 +23,6 @@ public class RecordingDocument
     [FirestoreProperty("transcriptionReady")]
     public bool TranscriptionReady { get; set; }
 
-    [FirestoreProperty("diarizationReady")]
-    public bool DiarizationReady { get; set; }
-
-    [FirestoreProperty("speakerTurns")]
-    public List<SpeakerTurnDocument> SpeakerTurns { get; set; } = [];
-
     [FirestoreProperty("createdAt")]
     public Timestamp CreatedAt { get; set; }
-}
-
-[FirestoreData]
-public class SpeakerTurnDocument
-{
-    [FirestoreProperty("startMs")]
-    public long StartMs { get; set; }
-
-    [FirestoreProperty("endMs")]
-    public long EndMs { get; set; }
-
-    [FirestoreProperty("speakerLabel")]
-    public string SpeakerLabel { get; set; } = string.Empty;
 }

@@ -17,8 +17,6 @@ public static class DependencyInjection
         services.AddScoped<RetryMeeting>();
 
         services.AddScoped<UploadRecording>();
-        services.AddScoped<GetUploadUrl>();
-        services.AddScoped<CompleteUpload>();
         services.AddScoped<GetAudioUrl>();
 
         services.AddScoped<GetMeetingTranscript>();
@@ -28,8 +26,6 @@ public static class DependencyInjection
         services.AddScoped<RenameSpeaker>();
 
         services.AddScoped<ProcessRecordingUploaded>();
-        services.AddScoped<ProcessDiarization>();
-        services.AddScoped<MergeTranscriptAndDiarization>();
         services.AddScoped<ProcessMeetingReady>();
         services.AddScoped<MarkMeetingFailed>();
 

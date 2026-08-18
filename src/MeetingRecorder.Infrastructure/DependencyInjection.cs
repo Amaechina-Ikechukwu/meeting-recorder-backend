@@ -70,7 +70,6 @@ public static class DependencyInjection
         services.AddScoped<IDocxExporter, OpenXmlDocxExporter>();
 
         services.AddScoped<ITranscriptionEngine, DeepgramTranscriptionEngine>();
-        services.AddScoped<IDiarizationEngine, DeepgramDiarizationEngine>();
         services.AddScoped<IMeetingNotifier, MeetingNotifier>();
 
         return services;

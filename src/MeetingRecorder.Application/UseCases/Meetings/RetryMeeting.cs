@@ -1,16 +1,17 @@
 using MeetingRecorder.Application.Abstractions;
 using MeetingRecorder.Application.Exceptions;
 using MeetingRecorder.Application.Messaging;
+using MeetingRecorder.Application.UseCases.Processing;
 using MeetingRecorder.Domain.Entities;
 using MeetingRecorder.Domain.Enums;
 
 namespace MeetingRecorder.Application.UseCases.Meetings;
 
-/// <summary>Re-publishes the recording.uploaded event for a failed meeting so processing restarts.</summary>
+/// <summary>Re-runs transcription for a failed meeting, in the request, as the upload does.</summary>
 public class RetryMeeting(
     IMeetingRepository meetings,
     IRecordingRepository recordings,
-    IMessagePublisher publisher)
+    ProcessRecordingUploaded processRecording)
 {
     public async Task ExecuteAsync(string requesterId, string meetingId, string recordingId, CancellationToken ct = default)
     {
@@ -27,9 +28,7 @@ public class RetryMeeting(
             ?? throw new NotFoundException("Recording", recordingId);
 
         recording.TranscriptionReady = false;
-        recording.DiarizationReady = false;
-        recording.SpeakerTurns = [];
-        recording.Status = Domain.Enums.RecordingStatus.Uploaded;
+        recording.Status = RecordingStatus.Uploaded;
         await recordings.UpdateAsync(recording, ct);
 
         meeting.Status = MeetingStatus.Processing;
@@ -37,9 +36,7 @@ public class RetryMeeting(
         meeting.FailureMessage = null;
         await meetings.UpdateAsync(meeting, ct);
 
-        await publisher.PublishAsync(
-            QueueNames.RecordingUploaded,
-            new RecordingUploadedMessage(meeting.Id, recording.Id, recording.StorageKey, recording.ContentType),
-            ct);
+        await processRecording.ExecuteAsync(
+            new RecordingUploadedMessage(meeting.Id, recording.Id, recording.StorageKey, recording.ContentType), ct);
     }
 }
