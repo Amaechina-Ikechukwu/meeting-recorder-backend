@@ -7,8 +7,8 @@ namespace MeetingRecorder.Infrastructure.Realtime;
 
 /// <summary>
 /// Pushes updates to the "meeting:{id}" SignalR group. Registered in both the Api and
-/// Workers hosts; with a shared Redis backplane a Worker-raised event reaches clients
-/// connected to a different Api instance (see DependencyInjection.AddSignalRRealtime).
+/// Workers hosts. There is no backplane, so a push only reaches clients connected to
+/// the same host (see DependencyInjection.AddSignalRRealtime).
 /// </summary>
 public class MeetingNotifier(IHubContext<MeetingHub> hubContext) : IMeetingNotifier
 {

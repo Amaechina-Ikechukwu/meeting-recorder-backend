@@ -79,17 +79,16 @@ public static class DependencyInjection
     /// <summary>
     /// Registers SignalR plus IMeetingNotifier. Call from both the Api host (which also
     /// maps MeetingHub) and the Workers host (which only ever pushes, never accepts
-    /// connections) so both share the Redis backplane when Redis:ConnectionString is set.
+    /// connections).
     /// </summary>
-    public static IServiceCollection AddSignalRRealtime(this IServiceCollection services, IConfiguration configuration)
+    /// <remarks>
+    /// There is no backplane. Each host gets its own in-memory SignalR, so a push raised
+    /// in the Workers host does not reach browsers connected to the Api host; the client
+    /// polls meeting status as its fallback for that.
+    /// </remarks>
+    public static IServiceCollection AddSignalRRealtime(this IServiceCollection services)
     {
-        services.Configure<RedisOptions>(configuration.GetSection(RedisOptions.SectionName));
-        var redisConnectionString = configuration[$"{RedisOptions.SectionName}:ConnectionString"];
-
-        var signalRBuilder = services.AddSignalR();
-        if (!string.IsNullOrWhiteSpace(redisConnectionString))
-            signalRBuilder.AddStackExchangeRedis(redisConnectionString);
-
+        services.AddSignalR();
         return services;
     }
 }

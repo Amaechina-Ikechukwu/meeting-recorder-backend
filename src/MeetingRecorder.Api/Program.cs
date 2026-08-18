@@ -13,7 +13,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
-    .AddSignalRRealtime(builder.Configuration);
+    .AddSignalRRealtime();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
@@ -23,14 +23,17 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApi();
 
+// Open to any origin: the client is served from whatever host it is deployed to, so
+// pinning an allow-list here only ever blocked it. AllowCredentials is deliberately
+// absent -- it cannot be combined with AllowAnyOrigin, and callers authenticate with a
+// bearer token rather than a cookie, so nothing depends on it.
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        policy.AllowAnyOrigin()
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            .AllowAnyMethod();
     });
 });
 

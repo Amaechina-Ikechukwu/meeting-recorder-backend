@@ -7,7 +7,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)
-    .AddSignalRRealtime(builder.Configuration);
+    .AddSignalRRealtime();
 
 builder.Services.AddHostedService<TranscriptionConsumer>();
 builder.Services.AddHostedService<DiarizationConsumer>();

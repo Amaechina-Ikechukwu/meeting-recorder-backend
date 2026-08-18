@@ -33,7 +33,6 @@ shape (`appsettings.json`, environment variables, or user-secrets):
 | `RabbitMQ:ConnectionString` | Broker connection string (`amqp://user:pass@host:port`), plus `ExchangeName` and `MaxRetryAttempts` before dead-lettering. |
 | `Deepgram:ApiKey` | STT/diarization provider credential (see Open Questions in the design doc — swappable via `ITranscriptionEngine`/`IDiarizationEngine`). |
 | `ZeptoMail:ApiKey` | Transactional email for the "transcript ready" notification. |
-| `Redis:ConnectionString` | Optional SignalR backplane; leave empty for single-instance/local dev. |
 
 Google credentials are resolved via Application Default Credentials
 (`GOOGLE_APPLICATION_CREDENTIALS` env var pointing at a service account key, or
@@ -43,7 +42,7 @@ for Firestore, GCS signed URLs, and Firebase Admin.
 ## Running locally
 
 ```bash
-# start RabbitMQ (and optionally Redis) locally, e.g.:
+# start RabbitMQ locally, e.g.:
 docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4-management
 
 dotnet run --project src/MeetingRecorder.Api

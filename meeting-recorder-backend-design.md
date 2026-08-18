@@ -180,7 +180,7 @@ public class MeetingNotifier(IHubContext<MeetingHub> hubContext) : IMeetingNotif
 
 - **Wiring**: `app.MapHub<MeetingHub>("/hubs/meeting")`, authorized via the same Firebase Auth JWT bearer scheme used by the REST API (`RequireAuthorization()` on the hub).
 - **Where it's called from**: the RabbitMQ workers (§6 Async Processing) inject `IMeetingNotifier` and push a status event after each stage — `Processing`, per-segment `transcriptSegmentReady` as chunks finish (enables a live-updating transcript UI rather than a single blocking wait), and `Ready`/`Failed` at the end.
-- **Scale-out**: if the API/workers run on multiple instances, add a SignalR backplane (Redis backplane via `AddStackExchangeRedis(...)`) so a message published by one worker instance reaches clients connected to a different API instance.
+- **Scale-out**: SignalR runs without a backplane, so a push only reaches clients connected to the same host — a Workers-raised event does not reach a browser attached to the Api. Clients poll meeting status as the fallback. Adding a backplane would be the fix if live push from Workers is ever required.
 - **Fallback**: clients that don't maintain a persistent connection (or reconnect after a drop) can still call `GET /meetings/{id}/status` to resync state — SignalR is an optimization for immediacy, not the source of truth (Firestore is).
 
 ---
