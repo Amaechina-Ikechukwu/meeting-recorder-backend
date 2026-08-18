@@ -70,17 +70,18 @@ public class ProcessRecordingUploaded(
         await transcripts.SaveAsync(transcript, ct);
 
         // Recompute speaking time from this transcript rather than accumulating, so a retry
-        // does not double-count.
+        // does not double-count. The upserts do not depend on each other, so overlap them
+        // instead of paying for the Firestore round trips end to end.
         foreach (var speaker in speakersByLabel.Values)
         {
             speaker.TotalSpeakingMs = transcript.Segments
                 .Where(seg => seg.SpeakerId == speaker.Id)
                 .Sum(seg => seg.EndMs - seg.StartMs);
-            await speakers.UpsertAsync(speaker, ct);
         }
+        await Task.WhenAll(speakersByLabel.Values.Select(s => speakers.UpsertAsync(s, ct)));
 
-        foreach (var segment in transcript.Segments.OrderBy(s => s.StartMs))
-            await notifier.NotifyTranscriptSegmentReadyAsync(message.MeetingId, segment, ct);
+        await notifier.NotifyTranscriptSegmentsReadyAsync(
+            message.MeetingId, [.. transcript.Segments.OrderBy(s => s.StartMs)], ct);
 
         await recordings.MarkTranscriptionReadyAsync(message.MeetingId, message.RecordingId, ct);
         await recordings.UpdateStatusAsync(message.MeetingId, message.RecordingId, RecordingStatus.Processed, ct);

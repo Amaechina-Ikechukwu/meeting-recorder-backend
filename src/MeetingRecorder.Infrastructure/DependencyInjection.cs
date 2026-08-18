@@ -51,6 +51,9 @@ public static class DependencyInjection
         {
             var opts = sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<DeepgramOptions>>().Value;
             client.BaseAddress = new Uri(opts.BaseUrl);
+            // Batch transcription of an hour-long meeting runs well past HttpClient's 100s
+            // default, which surfaced as a meeting that failed for no visible reason.
+            client.Timeout = TimeSpan.FromMinutes(opts.RequestTimeoutMinutes);
         });
         services.AddHttpClient<ZeptoMailEmailSender>((sp, client) =>
         {

@@ -16,7 +16,7 @@ public class MeetingNotifier(IHubContext<MeetingHub> hubContext) : IMeetingNotif
         hubContext.Clients.Group(MeetingHub.GroupName(meetingId))
             .SendAsync("meetingStatusChanged", new { meetingId, status = status.ToString() }, ct);
 
-    public Task NotifyTranscriptSegmentReadyAsync(string meetingId, TranscriptSegment segment, CancellationToken ct = default) =>
+    public Task NotifyTranscriptSegmentsReadyAsync(string meetingId, IReadOnlyList<TranscriptSegment> segments, CancellationToken ct = default) =>
         hubContext.Clients.Group(MeetingHub.GroupName(meetingId))
-            .SendAsync("transcriptSegmentReady", segment, ct);
+            .SendAsync("transcriptSegmentsReady", segments, ct);
 }

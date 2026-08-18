@@ -15,4 +15,21 @@ public class DeepgramOptions
     /// request.
     /// </summary>
     public string DiarizationModel { get; set; } = "latest";
+
+    /// <summary>
+    /// Hand Deepgram a signed URL to the stored object and let it read from GCS directly,
+    /// instead of pulling the audio into this process and posting the bytes back out.
+    /// Turn off only if the bucket is unreachable from Deepgram's network; the client falls
+    /// back to streaming on its own if signing fails.
+    /// </summary>
+    public bool UseSignedSourceUrl { get; set; } = true;
+
+    /// <summary>How long the signed URL handed to Deepgram stays valid.</summary>
+    public int SourceUrlValidMinutes { get; set; } = 30;
+
+    /// <summary>
+    /// Ceiling on a single transcription call. HttpClient's 100s default cut long
+    /// recordings off mid-transcription and surfaced as a failed meeting.
+    /// </summary>
+    public int RequestTimeoutMinutes { get; set; } = 15;
 }

@@ -31,7 +31,7 @@ shape (`appsettings.json`, environment variables, or user-secrets):
 | `Firestore:ProjectId` | GCP project hosting Firestore. |
 | `Storage:BucketName` | GCS bucket for audio and derived artifacts. |
 | `RabbitMQ:ConnectionString` | Broker connection string (`amqp://user:pass@host:port`), plus `ExchangeName` and `MaxRetryAttempts` before dead-lettering. |
-| `Deepgram:ApiKey` | STT/diarization provider credential (see Open Questions in the design doc — swappable via `ITranscriptionEngine`/`IDiarizationEngine`). |
+| `Deepgram:ApiKey` | STT/diarization provider credential — swappable via `ITranscriptionEngine`. `UseSignedSourceUrl` (default on) hands Deepgram a signed GCS URL so it reads the audio straight out of the bucket instead of this service downloading and re-uploading it; `RequestTimeoutMinutes` caps a single transcription call. |
 | `ZeptoMail:ApiKey` | Transactional email for the "transcript ready" notification. |
 
 Google credentials are resolved via Application Default Credentials
