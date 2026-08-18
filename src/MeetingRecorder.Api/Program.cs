@@ -10,6 +10,11 @@ using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Recordings are POSTed as a single request body. Cloud Run caps an HTTP/1 request at
+// 32 MiB, so match that instead of Kestrel's lower default and fail at the same point
+// the platform would.
+builder.WebHost.ConfigureKestrel(options => options.Limits.MaxRequestBodySize = 32L * 1024 * 1024);
+
 builder.Services
     .AddApplication()
     .AddInfrastructure(builder.Configuration)

@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.AddScoped<GetMeetingStatus>();
         services.AddScoped<RetryMeeting>();
 
+        services.AddScoped<UploadRecording>();
         services.AddScoped<GetUploadUrl>();
         services.AddScoped<CompleteUpload>();
         services.AddScoped<GetAudioUrl>();

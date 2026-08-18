@@ -7,3 +7,5 @@ public record GetUploadUrlResponse(string RecordingId, Uri UploadUrl, string Sto
 public record CompleteUploadRequest(long DurationMs);
 
 public record AudioUrlResponse(Uri Url, DateTimeOffset ExpiresAt);
+
+public record UploadRecordingResponse(string RecordingId, string StorageKey);
