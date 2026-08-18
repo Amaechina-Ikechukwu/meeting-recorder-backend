@@ -24,6 +24,15 @@ public class FirestoreMeetingRepository(FirestoreDb db) : IMeetingRepository
     public Task CreateAsync(Meeting meeting, CancellationToken ct = default) =>
         Collection.Document(meeting.Id).SetAsync(meeting.ToDocument(), cancellationToken: ct);
 
+    /// <summary>
+    /// The meeting's own fields. The transcript pointers live on the same document but
+    /// belong to FirestoreTranscriptRepository, and ToDocument leaves them null — with
+    /// MergeAll that null would be written, silently detaching the transcript from a
+    /// meeting whose status had merely changed.
+    /// </summary>
+    private static readonly SetOptions MeetingFields = SetOptions.MergeFields(
+        "ownerId", "title", "status", "failureReason", "failureMessage", "createdAt", "participantHints");
+
     public Task UpdateAsync(Meeting meeting, CancellationToken ct = default) =>
-        Collection.Document(meeting.Id).SetAsync(meeting.ToDocument(), SetOptions.MergeAll, ct);
+        Collection.Document(meeting.Id).SetAsync(meeting.ToDocument(), MeetingFields, ct);
 }

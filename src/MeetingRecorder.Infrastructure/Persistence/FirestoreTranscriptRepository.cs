@@ -38,6 +38,16 @@ public class FirestoreTranscriptRepository(FirestoreDb db) : ITranscriptReposito
         };
     }
 
+    /// <summary>
+    /// The three fields on the meeting document that belong to the transcript, and the
+    /// only ones this repository is allowed to write. MergeAll would merge every property
+    /// of the MeetingDocument passed to it, defaults included, so saving a transcript
+    /// blanked the meeting's status, ownerId, title and createdAt — and the next read of
+    /// that meeting died parsing "" as a MeetingStatus.
+    /// </summary>
+    private static readonly SetOptions TranscriptFields =
+        SetOptions.MergeFields("transcriptId", "transcriptRecordingId", "transcriptCreatedAt");
+
     public async Task SaveAsync(Transcript transcript, CancellationToken ct = default)
     {
         await MeetingDoc(transcript.MeetingId).SetAsync(new MeetingDocument
@@ -45,7 +55,7 @@ public class FirestoreTranscriptRepository(FirestoreDb db) : ITranscriptReposito
             TranscriptId = transcript.Id,
             TranscriptRecordingId = transcript.RecordingId,
             TranscriptCreatedAt = Timestamp.FromDateTimeOffset(transcript.CreatedAt)
-        }, SetOptions.MergeAll, ct);
+        }, TranscriptFields, ct);
 
         var existingIds = (await SegmentsOf(transcript.MeetingId).GetSnapshotAsync(ct))
             .Documents.Select(d => d.Id).ToHashSet();

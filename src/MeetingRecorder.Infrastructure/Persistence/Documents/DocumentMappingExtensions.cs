@@ -6,6 +6,15 @@ namespace MeetingRecorder.Infrastructure.Persistence.Documents;
 
 public static class DocumentMappingExtensions
 {
+    /// <summary>
+    /// Reads a stored enum without throwing on a value this code cannot make sense of.
+    /// A blank or unrecognised status otherwise makes the whole document unreadable —
+    /// Enum.Parse on "" throws — which turns one bad field into a meeting the owner can
+    /// neither open nor retry. Reporting it as failed at least leaves the retry path open.
+    /// </summary>
+    private static TEnum ParseOr<TEnum>(string? stored, TEnum fallback) where TEnum : struct =>
+        Enum.TryParse<TEnum>(stored, out var parsed) ? parsed : fallback;
+
     public static MeetingDocument ToDocument(this Meeting meeting) => new()
     {
         OwnerId = meeting.OwnerId,
@@ -22,8 +31,8 @@ public static class DocumentMappingExtensions
         Id = id,
         OwnerId = doc.OwnerId,
         Title = doc.Title,
-        Status = Enum.Parse<MeetingStatus>(doc.Status),
-        FailureReason = Enum.Parse<FailureReason>(string.IsNullOrEmpty(doc.FailureReason) ? nameof(FailureReason.None) : doc.FailureReason),
+        Status = ParseOr(doc.Status, MeetingStatus.Failed),
+        FailureReason = ParseOr(doc.FailureReason, FailureReason.None),
         FailureMessage = doc.FailureMessage,
         CreatedAt = doc.CreatedAt.ToDateTimeOffset(),
         ParticipantHints = doc.ParticipantHints
@@ -47,7 +56,7 @@ public static class DocumentMappingExtensions
         StorageKey = doc.StorageKey,
         ContentType = doc.ContentType,
         DurationMs = doc.DurationMs,
-        Status = Enum.Parse<RecordingStatus>(doc.Status),
+        Status = ParseOr(doc.Status, RecordingStatus.Failed),
         TranscriptionReady = doc.TranscriptionReady,
         CreatedAt = doc.CreatedAt.ToDateTimeOffset()
     };
